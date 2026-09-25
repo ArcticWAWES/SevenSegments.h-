@@ -1,180 +1,112 @@
-#include "SevenSegment.h"
+#include "SevenSegments.h"
 
-// Таблица сегментов для цифр 0-9 и знака минус (индекс 10)
-// Порядок: A, B, C, D, E, F, G, DP
-const bool nums[11][8] = {
-  {1, 1, 1, 1, 1, 1, 0, 0}, // 0
-  {0, 1, 1, 0, 0, 0, 0, 0}, // 1
-  {1, 1, 0, 1, 1, 0, 1, 0}, // 2
-  {1, 1, 1, 1, 0, 0, 1, 0}, // 3
-  {0, 1, 1, 0, 0, 1, 1, 0}, // 4
-  {1, 0, 1, 1, 0, 1, 1, 0}, // 5
-  {1, 0, 1, 1, 1, 1, 1, 0}, // 6
-  {1, 1, 1, 0, 0, 0, 0, 0}, // 7
-  {1, 1, 1, 1, 1, 1, 1, 0}, // 8
-  {1, 1, 1, 1, 0, 1, 1, 0}, // 9
-  {0, 0, 0, 0, 0, 0, 1, 0}  // 10: Минус
+const bool nums[10][8] = {
+  {1, 1, 1, 1, 1, 1, 0, 0},
+  {0, 1, 1, 0, 0, 0, 0, 0},
+  {1, 1, 0, 1, 1, 0, 1, 0},
+  {1, 1, 1, 1, 0, 0, 1, 0},
+  {0, 1, 1, 0, 0, 1, 1, 0},
+  {1, 0, 1, 1, 0, 1, 1, 0},
+  {1, 0, 1, 1, 1, 1, 1, 0},
+  {1, 1, 1, 0, 0, 0, 0, 0},
+  {1, 1, 1, 1, 1, 1, 1, 0},
+  {1, 1, 1, 1, 0, 1, 1, 0}
 };
 
-// --- Конструктор для 1 разряда ---
-SevenSegment::SevenSegment(int segPins[8], bool commonAnode) {
-  for (int i = 0; i < 8; i++) {
-    _segPins[i] = segPins[i];
-  }
-  _numDigits = 1;
-  _commonAnode = commonAnode;
-  _currentDigit = 0;
-  _buffer[0] = 0;
-}
-
-// --- Конструктор для 4 разрядов ---
-SevenSegment::SevenSegment(int segPins[8], int digitPins[4], bool commonAnode) {
-  for (int i = 0; i < 8; i++) {
-    _segPins[i] = segPins[i];
-  }
-  for (int i = 0; i < 4; i++) {
-    _digitPins[i] = digitPins[i];
-    _buffer[i] = 0; // Инициализация нулями
-  }
-  _numDigits = 4;
-  _commonAnode = commonAnode;
-  _currentDigit = 0;
+// ================= КЛАСС ДЛЯ 1 РАЗРЯДА =================
+SevenSegment::SevenSegment(int pins[8], bool ca) {
+  for (int i = 0; i < 8; i++) _pins[i] = pins[i];
+  commonAnode = ca;
 }
 
 void SevenSegment::begin() {
-  // Настройка пинов сегментов
   for (int i = 0; i < 8; i++) {
-    pinMode(_segPins[i], OUTPUT);
-    // Выключаем сегменты при старте
-    digitalWrite(_segPins[i], _commonAnode ? HIGH : LOW);
-  }
-
-  // Настройка пинов разрядов (только если их больше 1)
-  if (_numDigits > 1) {
-    for (int i = 0; i < _numDigits; i++) {
-      pinMode(_digitPins[i], OUTPUT);
-      // Выключаем разряды при старте (для общего катода LOW, для анода HIGH)
-      digitalWrite(_digitPins[i], _commonAnode ? HIGH : LOW);
-    }
-  }
-}
-
-// Вспомогательная функция: вывод сегментов для одной цифры
-void SevenSegment::_writeSegments(int digit) {
-  if (digit < 0 || digit > 10) return; // 10 - это минус
-  
-  for (int i = 0; i < 8; i++) {
-    bool state = nums[digit][i];
-    if (_commonAnode) state = !state;
-    digitalWrite(_segPins[i], state);
-  }
-}
-
-// Вспомогательная функция: выбор активного разряда
-void SevenSegment::_selectDigit(int digit) {
-  if (_numDigits == 1) return; // Для 1 разряда ничего не делаем
-
-  // Сначала выключаем все разряды, чтобы не было "призраков"
-  for (int i = 0; i < _numDigits; i++) {
-    digitalWrite(_digitPins[i], _commonAnode ? HIGH : LOW);
-  }
-  
-  // Включаем нужный разряд
-  if (digit >= 0 && digit < _numDigits) {
-    digitalWrite(_digitPins[digit], _commonAnode ? LOW : HIGH);
-  }
-}
-
-void SevenSegment::setDigit(int position, int value) {
-  if (position >= 0 && position < _numDigits) {
-    _buffer[position] = value;
-  }
-}
-
-void SevenSegment::print(int number) {
-  // Если число отрицательное, обрабатываем знак
-  bool isNegative = false;
-  if (number < 0) {
-    isNegative = true;
-    number = -number;
-  }
-
-  // Заполняем буфер справа налево
-  for (int i = _numDigits - 1; i >= 0; i--) {
-    _buffer[i] = number % 10;
-    number /= 10;
-  }
-
-  // Если было отрицательное число, ставим минус в первый разряд
-  if (isNegative && _numDigits > 0) {
-    _buffer[0] = 10; // Индекс минуса
+    pinMode(_pins[i], OUTPUT);
+    digitalWrite(_pins[i], commonAnode ? HIGH : LOW);
   }
 }
 
 void SevenSegment::clear() {
-  for (int i = 0; i < _numDigits; i++) {
-    _buffer[i] = -1; // -1 означает пустой разряд (или 0, если хотите)
-  }
-  // Если 1 разряд, просто гасим сегменты
-  if (_numDigits == 1) {
-     for (int i = 0; i < 8; i++) {
-        digitalWrite(_segPins[i], _commonAnode ? HIGH : LOW);
-     }
+  for (int i = 0; i < 8; i++) digitalWrite(_pins[i], commonAnode ? HIGH : LOW);
+}
+
+void SevenSegment::displayDigit(int digit) {
+  if (digit < 0 || digit > 9) return;
+  for (int i = 0; i < 8; i++) {
+    bool state = nums[digit][i];
+    if (commonAnode) state = !state;
+    digitalWrite(_pins[i], state);
   }
 }
 
-// САМАЯ ВАЖНАЯ ФУНКЦИЯ ДЛЯ 4-РАЗРЯДНОГО ИНДИКАТОРА
-void SevenSegment::refresh() {
-  if (_numDigits == 1) {
-    // Для 1 разряда просто показываем то, что в буфере
-    if (_buffer[0] != -1) _writeSegments(_buffer[0]);
-    return;
-  }
-
-  // 1. Выключаем текущий разряд (чтобы избежать мерцания)
-  _selectDigit(-1); 
-
-  // 2. Если в буфере пусто (-1), переходим к следующему
-  if (_buffer[_currentDigit] == -1) {
-      _currentDigit++;
-      if (_currentDigit >= _numDigits) _currentDigit = 0;
-      return; 
-  }
-
-  // 3. Устанавливаем сегменты для текущей цифры
-  _writeSegments(_buffer[_currentDigit]);
-
-  // 4. Включаем этот разряд
-  _selectDigit(_currentDigit);
-
-  // 5. Переходим к следующему разряду для следующего вызова refresh()
-  _currentDigit++;
-  if (_currentDigit >= _numDigits) _currentDigit = 0;
-}
+// void SevenSegment::displayDigit(int number) {
+//   displayDigit(abs(number) % 10);
+// }
 
 void SevenSegment::testPattern(int delayMs) {
-  if (_numDigits == 1) {
-    for (int digit = 0; digit <= 10; digit++) {
-        _writeSegments(digit);
-        delay(delayMs);
-    }
+  for (int i = 0; i < 8; i++) {
     clear();
-  } else {
-    // Тест для 4 разрядов: заполняем все цифры
-    for(int i=0; i<_numDigits; i++) setDigit(i, 8);
-    unsigned long start = millis();
-    while(millis() - start < 2000) {
-        refresh();
+    delay(50);
+    digitalWrite(_pins[i], commonAnode ? LOW : HIGH);
+    delay(delayMs);
+  }
+  clear();
+  delay(100);
+  for (int digit = 0; digit <= 9; digit++) {
+    displayDigit(digit);
+    delay(delayMs);
+  }
+  clear();
+}
+
+// ================= КЛАСС ДЛЯ 4 РАЗРЯДОВ =================
+FourSevenSegment::FourSevenSegment(int pins[8], int digits[4], bool commonAnode) : SevenSegment(pins, commonAnode) {
+  for (int i = 0; i < 4; i++) {
+    _digits[i] = digits[i];
+    _buf[i] = -1; // Инициализируем буфер пустыми значениями (-1)
+  }
+}
+
+void FourSevenSegment::begin() {
+  SevenSegment::begin();
+  for (int i = 0; i < 4; i++) {
+    pinMode(_digits[i], OUTPUT);
+    digitalWrite(_digits[i], commonAnode ? LOW : HIGH);
+  }
+}
+
+void FourSevenSegment::clear() {
+  for (int i = 0; i < 4; i++) _buf[i] = -1;
+}
+
+void FourSevenSegment::displayDigitIndex(int digit, int idx) {
+  if (idx >= 0 && idx < 4) _buf[idx] = digit;
+}
+
+void FourSevenSegment::displayDigitAuto(int number) {
+  clear();
+  if (number < 0 || number > 9999) return;
+  for (int i = 0; i < 4; i++) {
+    _buf[i] = number % 10;
+    number /= 10;
+    if (number == 0 && _buf[i] == 0 && i > 0) { _buf[i] = -1; break; } // Гасим ведущие нули
+  }
+}
+
+void FourSevenSegment::tick() {
+  static unsigned long last = 0;
+  static int cur = 0;
+
+  if (millis() - last >= 2) {
+    last = millis();
+    digitalWrite(_digits[cur], commonAnode ? LOW : HIGH); // Гасим прошлый разряд
+    cur = (cur + 1) % 4;                                  // Шаг к следующему разряду
+
+    if (_buf[cur] != -1) {
+      SevenSegment::displayDigit(_buf[cur]);                // Включаем сегменты
+      digitalWrite(_digits[cur], commonAnode ? HIGH : LOW); // Зажигаем текущий разряд
+    } else {
+      SevenSegment::clear();
     }
-    
-    // Счет 0000 -> 9999
-    for(int i=0; i<10000; i+=1111) {
-        print(i);
-        unsigned long start2 = millis();
-        while(millis() - start2 < 500) {
-            refresh(); // Обязательно крутим refresh в цикле
-        }
-    }
-    clear();
   }
 }
