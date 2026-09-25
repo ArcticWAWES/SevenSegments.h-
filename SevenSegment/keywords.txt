@@ -1,0 +1,5 @@
+SevenSegment   KEYWORD1
+begin          KEYWORD2
+displayDigit   KEYWORD2
+clear          KEYWORD2
+testPattern    KEYWORD2
