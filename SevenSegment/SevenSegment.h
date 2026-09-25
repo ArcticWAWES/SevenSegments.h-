@@ -21,14 +21,16 @@ class FourSevenSegment : public SevenSegment {
   private:
     int _digits[4];
     int _buf[4]; // Буфер экрана
+    SevenSegment FourSevenSegment = SevenSegment(int pins[8], bool commonAnode);
     
   public:
-    FourSevenSegment(int pins[8], int digits[4], bool commonAnode = true);
+    _FourSevenSegment(int pins[8], int digits[4], bool commonAnode = true);
     void begin();
     void clear();
     void displayDigitIndex(int digit, int idx); // Вывод цифры на конкретный разряд (0-3)
     void displayDigitAuto(int number);         // Разложение большого числа по разрядам
-    void tick();                           // Динамическая индикация (вызывать в loop)
+    void tick();                              // Динамическая индикация (вызывать в loop)
 };
 
 #endif
+
