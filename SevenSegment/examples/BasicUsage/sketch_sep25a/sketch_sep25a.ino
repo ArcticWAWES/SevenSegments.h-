@@ -1,21 +1,22 @@
-#include <SevenSegment.h>
+#include "SevenSegments.h"
 
-// ВНИМАНИЕ: замените номера пинов на свои!
-// Порядок сегментов: A, B, C, D, E, F, G, DP
+// Пины сегментов в порядке: a, b, c, d, e, f, g, dp
+// Подставьте СВОИ номера пинов Arduino согласно распайке
 int segPins[8] = {2, 3, 4, 5, 6, 7, 8, 9};
 
-// Пины разрядов: D1, D2, D3, D4 (слева направо)
+// Пины разрядов: digits[0] — ЛЕВЫЙ (старший), digits[3] — ПРАВЫЙ (младший)
 int digitPins[4] = {10, 11, 12, 13};
 
-// true = Common Anode, false = Common Cathode
-SevenSegment display(segPins, digitPins, false);
+// ✅ Объявление переменной типа FourSevenSegment
+//    с инициализацией через конструктор — глобально
+// 3461BS-1 — общий катод, поэтому ca = false
+FourSevenSegment display(segPins, digitPins, false);
 
 void setup() {
-  Serial.begin(9600);
   display.begin();
-  display.print(1234);
+  display.displayDigit(1234);
 }
 
 void loop() {
-  display.refresh();   // КРИТИЧНО: вызывать постоянно!
+  display.tick();   // динамическая индикация, без delay
 }
